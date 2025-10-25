@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom"; // 🟢 Import navigation hook
 
 const Modal = ({ message, onConfirm }) => (
   <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
@@ -15,6 +16,8 @@ const Modal = ({ message, onConfirm }) => (
 );
 
 const Verification = () => {
+  const navigate = useNavigate(); // 🟢 Initialize navigation
+
   const [email, setEmail] = useState("");
   const [capturedPhoto, setCapturedPhoto] = useState(null);
   const [message, setMessage] = useState("");
@@ -27,6 +30,14 @@ const Verification = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+
+  // ✅ Auto-fill saved email if exists
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("verifiedEmail");
+    if (savedEmail) {
+      setEmail(savedEmail);
+    }
+  }, []);
 
   const getCameraAccess = useCallback(async () => {
     try {
@@ -61,8 +72,10 @@ const Verification = () => {
       });
       const data = await res.json();
       if (data.userExists) {
+        // ✅ Save email locally
+        localStorage.setItem("verifiedEmail", email);
         setIsUserVerified(true);
-        setMessage("User found. Please capture your photo.");
+        setMessage("User found. Please verify your face.");
         getCameraAccess();
       } else {
         setMessage("User not found. Please try a different email.");
@@ -87,11 +100,11 @@ const Verification = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (video && canvas) {
-      const context = canvas.getContext('2d');
+      const context = canvas.getContext("2d");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-      const photoDataUrl = canvas.toDataURL('image/jpeg');
+      const photoDataUrl = canvas.toDataURL("image/jpeg");
       setCapturedPhoto(photoDataUrl);
       return photoDataUrl;
     }
@@ -105,7 +118,7 @@ const Verification = () => {
       return;
     }
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
     const base64String = photo.split(",")[1];
@@ -160,11 +173,11 @@ const Verification = () => {
       setShowModal(true);
       return;
     }
-    setMessage("Capturing photo in 5 seconds...");
+    setMessage(" please wait for 5 seconds...");
     let currentCountdown = 4;
     const timer = setInterval(() => {
       if (currentCountdown >= 0) {
-        setMessage(`Capturing photo in ${currentCountdown} seconds...`);
+        setMessage(`please wait for  ${currentCountdown} seconds...`);
         currentCountdown--;
       } else {
         clearInterval(timer);
@@ -176,19 +189,29 @@ const Verification = () => {
     }, 1000);
   };
 
+  // 🟢 Updated to navigate to OTP Generator after successful photo verification
   const handleNext = async () => {
+    const storedEmail = localStorage.getItem("verifiedEmail");
+    if (!storedEmail) {
+      setMessage("No verified email found. Please verify again.");
+      setShowModal(true);
+      return;
+    }
+
     try {
       const res = await fetch("http://localhost:8000/api/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: storedEmail }),
       });
 
       const data = await res.json();
       if (data.success) {
         setMessage("OTP sent to your email or phone.");
         setShowModal(true);
-        // Optional: navigate("/otp-verification"); if using React Router
+
+        // 🟢 Redirect to OtpGenerator page
+        navigate("Otpverification");
       } else {
         setMessage("Failed to send OTP.");
         setShowModal(true);
@@ -248,7 +271,7 @@ const Verification = () => {
                   src={capturedPhoto}
                   alt="Captured verification"
                   className="max-w-full rounded-xl shadow-lg border-2 border-gray-200"
-                  style={{ width: '320px', height: '240px' }}
+                  style={{ width: "320px", height: "240px" }}
                 />
               ) : (
                 <video
@@ -256,12 +279,12 @@ const Verification = () => {
                   autoPlay
                   playsInline
                   className="rounded-xl shadow-lg border-2 border-gray-200 w-full"
-                  style={{ width: '320px', height: '240px' }}
+                  style={{ width: "320px", height: "240px" }}
                 />
               )}
             </div>
 
-            <canvas ref={canvasRef} style={{ display: 'none' }} />
+            <canvas ref={canvasRef} style={{ display: "none" }} />
 
             <div className="w-full flex justify-center pt-4 gap-4">
               <button
@@ -302,10 +325,7 @@ const Verification = () => {
       </div>
 
       {showModal && (
-        <Modal
-          message={message}
-          onConfirm={handleModalClose}
-        />
+        <Modal message={message} onConfirm={handleModalClose} />
       )}
     </div>
   );

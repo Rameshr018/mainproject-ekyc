@@ -4,6 +4,7 @@ import App from '../App.jsx'
 import Uploaddoc from '../pages/Uploaddoc.jsx';
 import HomePage from '../pages/Homepage.jsx';
 import Verification from '../pages/VerificationPage.jsx';
+import OtpVerification from '../pages/Otpverification.jsx';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -11,7 +12,18 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: 'register', element: < Uploaddoc/> },
-      {path:'verification',element:<Verification/>}
+      {path:'verification',element:<Verification/>},
+      {
+        path: '/',
+        element: <App />,
+        children: [
+          { index: true, element: <HomePage /> },
+          { path: 'register', element: <Uploaddoc /> },
+          { path: 'verification', element: <Verification /> },
+          { path: 'otp-verification', element: <OtpVerification /> } 
+        ]
+      }
+      
     ]
   }
 ]);

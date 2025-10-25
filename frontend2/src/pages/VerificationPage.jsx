@@ -75,7 +75,7 @@ const Verification = () => {
         // ✅ Save email locally
         localStorage.setItem("verifiedEmail", email);
         setIsUserVerified(true);
-        setMessage("User found. Please verify your face.");
+        setMessage("User found. Please capture your photo.");
         getCameraAccess();
       } else {
         setMessage("User not found. Please try a different email.");
@@ -173,11 +173,11 @@ const Verification = () => {
       setShowModal(true);
       return;
     }
-    setMessage(" please wait for 5 seconds...");
+    setMessage("Capturing photo in 5 seconds...");
     let currentCountdown = 4;
     const timer = setInterval(() => {
       if (currentCountdown >= 0) {
-        setMessage(`please wait for  ${currentCountdown} seconds...`);
+        setMessage(`Capturing photo in ${currentCountdown} seconds...`);
         currentCountdown--;
       } else {
         clearInterval(timer);
@@ -199,7 +199,7 @@ const Verification = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/api/send-otp", {
+      const res = await fetch("http://localhost:3000/api/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: storedEmail }),

@@ -8,14 +8,14 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Temporary OTP store
-let otpStore = {};
+const otpStore = {};
 
-// Nodemailer transporter (sender = your app Gmail)
+// Nodemailer transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "yourgmail@gmail.com", // stays your Gmail account for sending
-    pass: "your_app_password",   // Gmail App Password
+    user: "prajwalparikshithc@gmail.com", // your Gmail
+    pass: "msqjdmqlowgezesx",             // Gmail App Password
   },
 });
 
@@ -24,7 +24,7 @@ function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ✅ Send OTP (recipient = user email from frontend)
+// ✅ Send OTP
 app.post("/api/send-otp", async (req, res) => {
   const { email } = req.body;
 
@@ -38,8 +38,8 @@ app.post("/api/send-otp", async (req, res) => {
 
   try {
     await transporter.sendMail({
-      from: `"Your App Verification" <yourgmail@gmail.com>`, // sender (your Gmail)
-      to: email,                                             // ✅ recipient from frontend
+      from: `"OTP Verification" <prajwalparikshithc@gmail.com>`, // sender
+      to: email,                                                // recipient
       subject: "Your OTP Code",
       text: `Your OTP is ${otp}. It expires in 5 minutes.`,
     });
@@ -70,4 +70,6 @@ app.post("/api/verify-otp", (req, res) => {
   }
 });
 
-app.listen(8000, () => console.log("🚀 Server running on http://localhost:8000"));
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));

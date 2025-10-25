@@ -4,11 +4,13 @@
   "description": "",
   "main": "index.js",
  "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "cd backend && uvicorn app.main:app --reload",  
+    "dev": "concurrently -n backend,backend2,frontend -c green,blue,magenta \"npm run server\" \"npm run server2\" \"npm run client\"",
+    "server": "cd backend && uvicorn app.main:app --reload",
+    "server2": "cd backend2 && npm run dev",
     "client": "cd frontend2 && npm run dev"
-  }
-,
+  },
+
+
   "keywords": [],
   "author": "",
   "license": "ISC",

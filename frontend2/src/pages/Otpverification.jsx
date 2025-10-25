@@ -43,7 +43,7 @@ const OtpVerification = () => {
 
     try {
       setIsVerifying(true);
-      const res = await fetch("http://localhost:8000/api/verify-otp", {
+      const res = await fetch("http://localhost:3000/api/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),

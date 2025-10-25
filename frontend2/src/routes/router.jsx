@@ -20,7 +20,7 @@ const router = createBrowserRouter([
           { index: true, element: <HomePage /> },
           { path: 'register', element: <Uploaddoc /> },
           { path: 'verification', element: <Verification /> },
-          { path: 'otp-verification', element: <OtpVerification /> } 
+          { path: 'Otpverification', element: <OtpVerification /> } 
         ]
       }
       

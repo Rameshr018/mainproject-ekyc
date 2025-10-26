@@ -7,51 +7,73 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Temporary OTP store
+// ======================
+// 🔹 TEMPORARY OTP STORE
+// ======================
 const otpStore = {};
 
-// Nodemailer transporter
+// ======================
+// 🔹 NODEMAILER CONFIG
+// ======================
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // true for port 465, false for 587
   auth: {
     user: "prajwalparikshithc@gmail.com", // your Gmail
-    pass: "msqjdmqlowgezesx",             // Gmail App Password
+    pass: "msqjdmqlowgezesx",             // your App Password
   },
 });
 
-// Generate 6-digit OTP
+// ======================
+// 🔹 HELPER FUNCTIONS
+// ======================
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ✅ Send OTP
-app.post("/api/send-otp", async (req, res) => {
+function cleanExpiredOTPs() {
+  const now = Date.now();
+  for (const email in otpStore) {
+    if (otpStore[email].expiresAt < now) {
+      delete otpStore[email];
+    }
+  }
+}
+
+// Run cleanup every 1 minute
+setInterval(cleanExpiredOTPs, 60 * 1000);
+
+// ======================
+// 🔹 SEND OTP ENDPOINT
+// ======================
+app.post("/api/send-otp", (req, res) => {
   const { email } = req.body;
 
   if (!email)
     return res.status(400).json({ success: false, message: "Email required" });
 
   const otp = generateOTP();
-  otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 }; // 5 min expiry
+  otpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 }; // 5 min validity
 
-  console.log(`📨 Sending OTP ${otp} to ${email}`);
+  // Respond instantly (don't wait for Gmail)
+  res.json({ success: true, message: "OTP generation initiated." });
 
-  try {
-    await transporter.sendMail({
-      from: `"OTP Verification" <prajwalparikshithc@gmail.com>`, // sender
-      to: email,                                                // recipient
+  // Send email in background
+  transporter
+    .sendMail({
+      from: `"OTP Verification" <prajwalparikshithc@gmail.com>`,
+      to: email,
       subject: "Your OTP Code",
-      text: `Your OTP is ${otp}. It expires in 5 minutes.`,
-    });
-
-    res.json({ success: true, message: "✅ OTP sent to your email!" });
-  } catch (error) {
-    console.error("❌ Error sending OTP:", error);
-    res.status(500).json({ success: false, message: "Failed to send OTP." });
-  }
+      text: `Your OTP is ${otp}. It will expire in 5 minutes.`,
+    })
+    .then(() => console.log(`✅ OTP ${otp} sent to ${email}`))
+    .catch((err) => console.error("❌ Error sending OTP:", err));
 });
 
-// ✅ Verify OTP
+// ======================
+// 🔹 VERIFY OTP ENDPOINT
+// ======================
 app.post("/api/verify-otp", (req, res) => {
   const { email, otp } = req.body;
 
@@ -70,6 +92,8 @@ app.post("/api/verify-otp", (req, res) => {
   }
 });
 
-// Start server
+// ======================
+// 🔹 START SERVER
+// ======================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
